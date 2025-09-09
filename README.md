@@ -1,66 +1,120 @@
 # quarkus-tolerance
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Este proyecto utiliza **Quarkus**, el framework supersónico y subatómico de Java, para explorar **tolerancia a fallos en servicios REST**.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+Para más información sobre Quarkus, visita: [https://quarkus.io/](https://quarkus.io/).
 
-## Running the application in dev mode
+---
 
-You can run your application in dev mode that enables live coding using:
+## 🎯 Objetivo del proyecto
 
-```shell script
+Construir una **API REST con Quarkus** que funcione como **proxy resiliente**, consumiendo la API pública **[JSONPlaceholder Users](https://jsonplaceholder.typicode.com/users)** y demostrando las funcionalidades de **tolerancia a fallos**, incluyendo:
+
+* **Timeouts**: controlar respuestas lentas de la API externa.
+* **Retry**: reintentos automáticos en caso de fallas temporales.
+* **Fallback**: manejar respuestas alternativas cuando la API falla.
+* **Manejo de errores inesperados**: respuestas controladas para errores no previstos.
+
+El proyecto se levanta con **Docker**, incluye **pruebas unitarias con JUnit y RestAssured**, y muestra cómo Quarkus maneja distintos escenarios de resiliencia.
+
+---
+
+## 📡 Endpoints de la API
+
+### 1. **GET `/users`**
+
+* Consulta `https://jsonplaceholder.typicode.com/users`.
+* Comportamientos configurados:
+
+  | Mecanismo    | Configuración                                                                                      |
+    | ------------ |----------------------------------------------------------------------------------------------------|
+  | **Timeout**  | 3 segundos                                                                                         |
+  | **Retry**    | Hasta 3 intentos si la API falla o tarda más de 3 segundos. Intetaria la nueva peticion cada 500ms |
+  | **Fallback** | Devuelve un JSON alternativo con mensaje y lista vacía                                             |
+
+**Ejemplo de respuesta de fallback:**
+
+```json
+{
+  "message": "Servicio externo no disponible, intente más tarde",
+  "data": []
+}
+```
+
+---
+
+### 2. **GET `/api/health`**
+
+* Endpoint de **salud** para verificar que la API está activa, sin llamar a servicios externos.
+* Útil para Docker o Kubernetes (liveness/readiness).
+
+---
+
+## 🧪 Pruebas unitarias
+
+### 1. Éxito
+
+* **Escenario:** La API externa responde correctamente.
+* **Objetivo:** `/external/peoples` devuelve la lista completa de usuarios.
+* **Validación:** Código HTTP 200.
+
+### 2. Timeout
+
+* **Escenario:** La API externa tarda más de 3 segundos en responder.
+* **Objetivo:** Probar que el **timeout** funciona y activa el fallback.
+* **Validación:** Código HTTP 500 con el mensaje de fallback.
+
+### 3. Retry
+
+* **Escenario:** Las primeras llamadas fallan por timeout o error temporal, y la tercera responde correctamente.
+* **Objetivo:** Verificar que los reintentos funcionan antes de devolver el resultado correcto.
+* **Validación:** Código HTTP 200 y respuesta válida del tercer intento.
+
+### 4. Fallback total
+
+* **Escenario:** La API externa falla en todos los intentos (timeout o error 500).
+* **Objetivo:** Confirmar que el fallback se activa y devuelve respuesta controlada.
+* **Validación:** Código HTTP 200 con el JSON de fallback.
+
+### 5. Error inesperado
+
+* **Escenario:** Se lanza una excepción inesperada desde el servicio externo.
+* **Objetivo:** Evaluar que la API maneja errores imprevistos sin romper el sistema.
+* **Validación:** Código HTTP 500 con mensaje claro indicando el error.
+
+---
+
+## 🛠️ Ejecución en modo desarrollo
+
+Para ejecutar la aplicación en **modo dev** (live coding):
+
+```bash
 ./mvnw quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+* Quarkus proporciona una **Dev UI** disponible en: [http://localhost:8080/q/dev/](http://localhost:8080/q/dev/)
 
-## Packaging and running the application
+---
 
-The application can be packaged using:
+## 📦 Empaquetado y ejecución
 
-```shell script
+Para empaquetar la aplicación:
+
+```bash
 ./mvnw package
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+* Se genera `quarkus-run.jar` en `target/quarkus-app/`.
+* Ejecutar:
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```bash
+java -jar target/quarkus-app/quarkus-run.jar
 ```
+---
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+## ⚙️ Endpoints de salud
 
-## Creating a native executable
+Con la extensión `quarkus-smallrye-health`:
 
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/quarkus-tolerance-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
-
-## Related Guides
-
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-
-## Provided Code
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+* **Liveness:** `/q/health/live` → verifica que la aplicación esté viva.
+* **Readiness:** `/q/health/ready` → verifica si la aplicación está lista para atender solicitudes (conexión a servicios externos, DB, etc.).
