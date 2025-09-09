@@ -33,12 +33,14 @@ jobs:
           cache: maven
       - name: Run tests and generate Jacoco report
         run: ./mvnw test jacoco:report -B
-      - name: Publish Jacoco report to Pull Request
-        uses: jwgmeligmey/jacoco-report@v5
+      - name: Add Coverage to PR
+        id: jacoco
+        uses: madrapps/jacoco-report@v1.3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          path: target/site/jacoco/jacoco.xml
-          coverage_file_path: target/site/jacoco/jacoco.xml
+          paths: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 40
+          min-coverage-changed-files: 60
       - name: Upload Jacoco report
         uses: actions/upload-artifact@v4
         with:
