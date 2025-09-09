@@ -33,8 +33,15 @@ jobs:
           cache: maven
       - name: Run tests and generate Jacoco report
         run: ./mvnw test jacoco:report -B
+      - name: Publish Jacoco report to Pull Request
+        uses: jwgmeligmey/jacoco-report@v1.4.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          path: target/site/jacoco/jacoco.xml
+          coverage_file_path: target/site/jacoco/jacoco.xml
       - name: Upload Jacoco report
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
           path: target/site/jacoco/jacoco.xml
+
