@@ -74,7 +74,7 @@ class UsersResourceTest {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", MediaType.APPLICATION_JSON.toString())
                         .withBodyFile("users.json")
-                        .withStatus(500)));
+                        .withStatus(200)));
 
         given()
                 .when().get("/external/peoples")
