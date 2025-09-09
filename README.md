@@ -4,6 +4,8 @@ Este proyecto utiliza **Quarkus**, el framework supersónico y subatómico de Ja
 
 Para más información sobre Quarkus, visita: [https://quarkus.io/](https://quarkus.io/).
 
+## STATUS
+![CI Build](https://github.com/carloscercado/quarkus-tolerance/actions/workflows/ci-build.yml/badge.svg)
 ---
 
 ## 🎯 Objetivo del proyecto
