@@ -34,7 +34,7 @@ jobs:
       - name: Run tests and generate Jacoco report
         run: ./mvnw test jacoco:report -B
       - name: Publish Jacoco report to Pull Request
-        uses: jwgmeligmey/jacoco-report@v1.4.1
+        uses: jwgmeligmey/jacoco-report@v5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           path: target/site/jacoco/jacoco.xml
