@@ -36,8 +36,15 @@ jobs:
         run: ./mvnw jacoco:report -B
 
       # 6️⃣ Subir reporte como artifact
-      - name: Upload Jacoco report
-        uses: actions/upload-artifact@v4
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v4
         with:
-          name: jacoco-report
-          path: target/site/jacoco/
+          files: target/site/jacoco/jacoco.xml
+          flags: unittests
+          name: codecov-coverage
+
+      - name: Upload JUnit test results
+        uses: actions/upload-test-report@v3
+        with:
+          name: JUnit tests
+          path: target/surefire-reports/*.xml
